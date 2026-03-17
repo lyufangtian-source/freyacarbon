@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>碳中和日报</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #0d1f0f;
+    --forest: #1a3a1c;
+    --moss: #2d5c30;
+    --fern: #4a8c4e;
+    --sage: #7ab87e;
+    --mist: #b8d9ba;
+    --parchment: #f5f0e8;
+    --cream: #faf7f2;
+    --gold: #c8a84b;
+    --gold-light: #e8c96a;
+    --red-accent: #c0392b;
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a5a4c;
+    --text-muted: #7a8a7c;
+    --border: #d4e0d5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--cream);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- GRAIN OVERLAY ---- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.5;
+  }
+
+  /* ---- MASTHEAD ---- */
+  .masthead {
+    background: var(--forest);
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .masthead::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--sage), var(--gold));
+  }
+
+  .masthead-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 40px 28px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .masthead-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .edition-label {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    color: var(--sage);
+    text-transform: uppercase;
+  }
+
+  .tagline {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    color: var(--mist);
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+
+  .masthead-center {
+    text-align: center;
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 8px;
+    position: relative;
+  }
+
+  .logo-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .paper-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: 8px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .paper-name span {
+    color: var(--gold);
+  }
+
+  .paper-sub {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    color: var(--mist);
+    letter-spacing: 3px;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .masthead-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .masthead-date {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    color: var(--sage);
+    letter-spacing: 2px;
+  }
+
+  .masthead-issue {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    color: var(--mist);
+    font-weight: 300;
+  }
+
+  /* ---- TICKER BAR ---- */
+  .ticker-bar {
+    background: var(--gold);
+    padding: 6px 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ticker-track {
+    display: flex;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 1px;
+    padding: 0 40px;
+    flex-shrink: 0;
+  }
+
+  .ticker-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: var(--forest);
+    border-radius: 50%;
+    margin: 0 16px;
+    vertical-align: middle;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ---- MAIN LAYOUT ---- */
+  .main-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 40px 80px;
+  }
+
+  /* ---- INPUT PANEL ---- */
+  .input-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 36px 40px;
+    margin-bottom: 48px;
+    position: relative;
+    box-shadow: 0 2px 24px rgba(26,58,28,0.06);
+  }
+
+  .input-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--forest), var(--fern), var(--gold));
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .panel-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--forest);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 2px;
+  }
+
+  .panel-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .input-label {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .date-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 16px;
+    color: var(--text-primary);
+    background: var(--cream);
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+
+  .date-input:focus {
+    border-color: var(--moss);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(45,92,48,0.08);
+  }
+
+  .category-select {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--cream);
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a8c4e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+
+  .category-select:focus {
+    border-color: var(--moss);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(45,92,48,0.08);
+  }
+
+  .btn-generate {
+    padding: 14px 36px;
+    background: var(--forest);
+    color: white;
+    border: none;
+    border-radius: 2px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .btn-generate::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(200,168,75,0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .btn-generate:hover {
+    background: var(--moss);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(26,58,28,0.25);
+  }
+
+  .btn-generate:hover::after { opacity: 1; }
+
+  .btn-generate:active { transform: translateY(0); }
+
+  .btn-generate.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  /* ---- REPORT AREA ---- */
+  .report-area {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .report-area.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  /* ---- REPORT HEADER ---- */
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--forest);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .report-date-display {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .report-date-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--fern);
+    text-transform: uppercase;
+  }
+
+  .report-date-value {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 2px;
+  }
+
+  .report-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-action {
+    padding: 10px 24px;
+    border-radius: 2px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-download-pdf {
+    background: var(--forest);
+    color: white;
+    border: none;
+  }
+
+  .btn-download-pdf:hover {
+    background: var(--moss);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(26,58,28,0.2);
+  }
+
+  .btn-download-html {
+    background: transparent;
+    color: var(--forest);
+    border: 1.5px solid var(--forest);
+  }
+
+  .btn-download-html:hover {
+    background: var(--forest);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  /* ---- STATS BAR ---- */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-cell {
+    background: white;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: background 0.2s ease;
+  }
+
+  .stat-cell:hover { background: var(--cream); }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--forest);
+    line-height: 1;
+  }
+
+  .stat-change {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--fern);
+  }
+
+  .stat-change.down { color: var(--red-accent); }
+
+  /* ---- HEADLINE SECTION ---- */
+  .section-label {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: var(--fern);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- LEAD STORY ---- */
+  .lead-story {
+    display: grid;
+    grid-template-columns: 5fr 3fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+    background: white;
+    box-shadow: 0 2px 20px rgba(26,58,28,0.05);
+  }
+
+  .lead-story-content {
+    padding: 36px 40px;
+    border-right: 1px solid var(--border);
+  }
+
+  .story-category-tag {
+    display: inline-block;
+    background: var(--forest);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 4px 12px;
+    margin-bottom: 16px;
+  }
+
+  .lead-headline {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .story-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .story-meta-dot {
+    width: 3px;
+    height: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+  }
+
+  .story-source {
+    font-weight: 700;
+    color: var(--fern);
+  }
+
+  .lead-excerpt {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 2;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .story-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .story-tag {
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    border-radius: 1px;
+    transition: all 0.15s;
+  }
+
+  .story-tag:hover {
+    border-color: var(--fern);
+    color: var(--fern);
+  }
+
+  .lead-story-sidebar {
+    padding: 24px 28px;
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 2px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .key-data-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .key-data-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .key-data-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .key-data-value {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--forest);
+  }
+
+  .key-data-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ---- NEWS GRID ---- */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .news-card {
+    background: white;
+    padding: 28px 28px;
+    transition: background 0.2s ease;
+    position: relative;
+  }
+
+  .news-card:hover { background: var(--cream); }
+
+  .news-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .news-card:hover::before { transform: scaleX(1); }
+  .news-card.policy::before { background: var(--forest); }
+  .news-card.market::before { background: var(--gold); }
+  .news-card.tech::before { background: var(--fern); }
+  .news-card.intl::before { background: var(--sage); }
+  .news-card.energy::before { background: #e67e22; }
+  .news-card.corp::before { background: #8e44ad; }
+
+  .card-category {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .card-category.policy { color: var(--forest); }
+  .card-category.market { color: #a07830; }
+  .card-category.tech { color: var(--fern); }
+  .card-category.intl { color: var(--sage); }
+  .card-category.energy { color: #e67e22; }
+  .card-category.corp { color: #8e44ad; }
+
+  .card-headline {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .card-excerpt {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.9;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .card-source { font-weight: 700; color: var(--fern); }
+
+  /* ---- POLICY TIMELINE ---- */
+  .timeline-section {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 36px 40px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 20px rgba(26,58,28,0.05);
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 28px;
+  }
+
+  .timeline-item:last-child { padding-bottom: 0; }
+
+  .timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--fern);
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--fern);
+  }
+
+  .timeline-dot.featured {
+    background: var(--gold);
+    box-shadow: 0 0 0 2px var(--gold);
+    width: 14px;
+    height: 14px;
+    left: -30px;
+    top: 4px;
+  }
+
+  .timeline-time {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .timeline-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+
+  .timeline-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  /* ---- MARKET DATA ---- */
+  .market-table {
+    background: white;
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+
+  .market-table-header {
+    background: var(--forest);
+    padding: 16px 28px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .mth-cell {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--mist);
+    text-transform: uppercase;
+  }
+
+  .market-row {
+    padding: 16px 28px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .market-row:last-child { border-bottom: none; }
+  .market-row:hover { background: var(--cream); }
+
+  .market-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .market-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .market-price {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .market-change {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .market-change.up { color: #27ae60; }
+  .market-change.down { color: var(--red-accent); }
+
+  .market-volume {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: monospace;
+  }
+
+  .mini-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--fern);
+    transition: width 1s ease;
+  }
+
+  /* ---- OPINION SECTION ---- */
+  .opinion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .opinion-card {
+    background: var(--cream);
+    padding: 28px 32px;
+    transition: background 0.2s;
+  }
+
+  .opinion-card:hover { background: white; }
+
+  .opinion-quote {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--text-primary);
+    line-height: 2;
+    margin-bottom: 16px;
+    padding-left: 20px;
+    border-left: 3px solid var(--gold);
+  }
+
+  .opinion-author {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .author-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 1px;
+  }
+
+  .author-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  /* ---- FOOTER ---- */
+  .report-footer {
+    border-top: 2px solid var(--forest);
+    padding-top: 24px;
+    margin-top: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .footer-brand {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--forest);
+    letter-spacing: 4px;
+  }
+
+  .footer-brand span { color: var(--gold); }
+
+  .footer-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    max-width: 360px;
+    line-height: 1.8;
+  }
+
+  .footer-right {
+    text-align: right;
+  }
+
+  .footer-disclaimer {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    line-height: 1.8;
+    max-width: 280px;
+  }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    opacity: 0.3;
+  }
+
+  .empty-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .empty-sub {
+    font-size: 13px;
+    letter-spacing: 1px;
+    line-height: 1.8;
+  }
+
+  /* ---- LOADING ANIMATION ---- */
+  .loading-state {
+    text-align: center;
+    padding: 80px 40px;
+    display: none;
+  }
+
+  .loading-state.active { display: block; }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--forest);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 24px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    color: var(--text-secondary);
+    letter-spacing: 3px;
+  }
+
+  /* ---- SCROLL ANIMATION ---- */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animated {
+    opacity: 0;
+    animation: fadeSlideIn 0.5s ease forwards;
+  }
+
+  .animated:nth-child(1) { animation-delay: 0.1s; }
+  .animated:nth-child(2) { animation-delay: 0.2s; }
+  .animated:nth-child(3) { animation-delay: 0.3s; }
+  .animated:nth-child(4) { animation-delay: 0.4s; }
+  .animated:nth-child(5) { animation-delay: 0.5s; }
+  .animated:nth-child(6) { animation-delay: 0.6s; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 768px) {
+    .masthead-inner { grid-template-columns: 1fr; text-align: center; }
+    .masthead-left, .masthead-right { align-items: center; }
+    .paper-name { font-size: 28px; letter-spacing: 4px; }
+    .main-wrapper { padding: 20px 20px 60px; }
+    .lead-story { grid-template-columns: 1fr; }
+    .lead-story-content { border-right: none; border-bottom: 1px solid var(--border); }
+    .news-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .market-table-header, .market-row { grid-template-columns: 2fr 1fr 1fr; }
+    .market-table-header .mth-cell:nth-child(4),
+    .market-table-header .mth-cell:nth-child(5),
+    .market-row > *:nth-child(4),
+    .market-row > *:nth-child(5) { display: none; }
+    .opinion-grid { grid-template-columns: 1fr; }
+    .report-actions { flex-wrap: wrap; }
+    .input-row { flex-direction: column; }
+    .btn-generate { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-left">
+      <span class="edition-label">CARBON NEUTRALITY DAILY</span>
+      <span class="tagline">中国碳中和权威信息平台</span>
+    </div>
+    <div class="masthead-center">
+      <div class="logo-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" stroke="#4a8c4e" stroke-width="1.5"/>
+          <path d="M24 8 Q30 16 24 24 Q18 16 24 8Z" fill="#4a8c4e" opacity="0.6"/>
+          <path d="M24 24 Q32 28 28 36 Q20 36 16 28 Q20 20 24 24Z" fill="#7ab87e" opacity="0.6"/>
+          <path d="M24 24 Q14 22 14 14 Q20 10 26 16 Q26 22 24 24Z" fill="#2d5c30" opacity="0.5"/>
+          <circle cx="24" cy="24" r="3" fill="#c8a84b"/>
+        </svg>
+      </div>
+      <div class="paper-name">碳<span>中</span>和日报</div>
+      <div class="paper-sub">Carbon Neutral Daily Intelligence</div>
+    </div>
+    <div class="masthead-right">
+      <span class="masthead-date" id="today-date">加载中...</span>
+      <span class="masthead-issue">专业版 PRO</span>
+    </div>
+  </div>
+</header>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item">全国碳市场今日交易活跃<span class="ticker-dot"></span></span>
+    <span class="ticker-item">国家能源局发布新能源发展指导意见<span class="ticker-dot"></span></span>
+    <span class="ticker-item">欧盟碳关税CBAM扩大覆盖范围<span class="ticker-dot"></span></span>
+    <span class="ticker-item">多家央企宣布碳中和路线图<span class="ticker-dot"></span></span>
+    <span class="ticker-item">绿氢成本持续下降 产业化进程加速<span class="ticker-dot"></span></span>
+    <span class="ticker-item">碳捕集与封存(CCS)示范项目落地<span class="ticker-dot"></span></span>
+    <!-- DUPLICATE for seamless loop -->
+    <span class="ticker-item">全国碳市场今日交易活跃<span class="ticker-dot"></span></span>
+    <span class="ticker-item">国家能源局发布新能源发展指导意见<span class="ticker-dot"></span></span>
+    <span class="ticker-item">欧盟碳关税CBAM扩大覆盖范围<span class="ticker-dot"></span></span>
+    <span class="ticker-item">多家央企宣布碳中和路线图<span class="ticker-dot"></span></span>
+    <span class="ticker-item">绿氢成本持续下降 产业化进程加速<span class="ticker-dot"></span></span>
+    <span class="ticker-item">碳捕集与封存(CCS)示范项目落地<span class="ticker-dot"></span></span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main-wrapper">
+
+  <!-- INPUT PANEL -->
+  <div class="input-panel">
+    <div class="panel-header">
+      <div class="panel-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="2" y="4" width="16" height="14" rx="1" stroke="white" stroke-width="1.5"/>
+          <path d="M6 2v4M14 2v4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M5 10h10M5 13.5h6" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="panel-title">生成碳中和日报</div>
+        <div class="panel-subtitle">选择日期，获取该日碳中和领域权威资讯汇编</div>
+      </div>
+    </div>
+
+    <div class="input-row">
+      <div class="input-group" style="max-width: 220px;">
+        <label class="input-label" for="report-date">报告日期</label>
+        <input type="date" class="date-input" id="report-date" />
+      </div>
+      <div class="input-group" style="max-width: 200px;">
+        <label class="input-label" for="report-category">内容侧重</label>
+        <select class="category-select" id="report-category">
+          <option value="all">全部领域</option>
+          <option value="policy">政策法规</option>
+          <option value="market">碳市场</option>
+          <option value="energy">能源转型</option>
+          <option value="corp">企业行动</option>
+          <option value="intl">国际动态</option>
+        </select>
+      </div>
+      <div class="input-group" style="max-width: 180px;">
+        <label class="input-label" for="report-depth">内容深度</label>
+        <select class="category-select" id="report-depth">
+          <option value="standard">标准版</option>
+          <option value="brief">简报版</option>
+          <option value="deep">深度版</option>
+        </select>
+      </div>
+      <button class="btn-generate" id="gen-btn" onclick="generateReport()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:inline;vertical-align:middle;margin-right:8px;">
+          <path d="M8 1v14M1 8h14" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="8" cy="8" r="4" stroke="white" stroke-width="1.5"/>
+        </svg>
+        生成日报
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div class="loading-state" id="loading-state">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">正在汇编碳中和资讯...</div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state" style="background:white;border:1px solid var(--border);">
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" stroke="#4a8c4e" stroke-width="1.5"/>
+          <path d="M32 16 Q38 24 32 32 Q26 24 32 16Z" fill="#4a8c4e" opacity="0.4"/>
+          <path d="M32 32 Q42 36 38 46 Q24 46 20 36 Q24 28 32 32Z" fill="#7ab87e" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="empty-title">选择日期，即刻生成日报</div>
+      <div class="empty-sub">支持 2020 年至今的历史日期 | 当日数据每日 08:00 自动更新</div>
+    </div>
+  </div>
+
+  <!-- REPORT AREA -->
+  <div class="report-area" id="report-area">
+    <div id="printable-report">
+
+      <!-- REPORT HEADER -->
+      <div class="report-header animated">
+        <div class="report-date-display">
+          <div class="report-date-label">CARBON NEUTRAL DAILY &mdash; EDITION</div>
+          <div class="report-date-value" id="display-date">2026年03月17日</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn-action btn-download-html" onclick="downloadHTML()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1v9M4 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M1 11h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            下载 HTML
+          </button>
+          <button class="btn-action btn-download-pdf" onclick="downloadPDF()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1v9M4 7l3 3 3-3" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M1 11h12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            导出 PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- STATS BAR -->
+      <div class="stats-bar animated" id="stats-bar">
+        <div class="stat-cell">
+          <div class="stat-label">全国碳市场均价</div>
+          <div class="stat-value" id="stat-price">--</div>
+          <div class="stat-change" id="stat-price-change">--</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">今日成交量</div>
+          <div class="stat-value" id="stat-volume">--</div>
+          <div class="stat-change" id="stat-volume-change">--</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">碳中和相关政策</div>
+          <div class="stat-value" id="stat-policy">--</div>
+          <div class="stat-change">本日新发布</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">重点企业动态</div>
+          <div class="stat-value" id="stat-corp">--</div>
+          <div class="stat-change">企业公告</div>
+        </div>
+      </div>
+
+      <!-- LEAD STORY -->
+      <div class="animated">
+        <div class="section-label">头版头条</div>
+        <div class="lead-story" id="lead-story-container">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- NEWS GRID -->
+      <div class="animated">
+        <div class="section-label">今日要闻</div>
+        <div class="news-grid" id="news-grid-container">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- POLICY TIMELINE -->
+      <div class="animated">
+        <div class="section-label">政策动态时间轴</div>
+        <div class="timeline-section" id="timeline-container">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- MARKET TABLE -->
+      <div class="animated">
+        <div class="section-label">碳市场数据</div>
+        <div class="market-table" id="market-table-container">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- OPINION -->
+      <div class="animated">
+        <div class="section-label">专家观点</div>
+        <div class="opinion-grid" id="opinion-container">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="report-footer animated">
+        <div class="footer-left">
+          <div class="footer-brand">碳<span>中</span>和日报</div>
+          <div class="footer-desc">聚焦中国碳中和进程，汇聚政策法规、市场动态、行业实践与国际资讯，为专业人士提供每日精选信息服务。</div>
+        </div>
+        <div class="footer-right">
+          <div class="footer-disclaimer">
+            本报告内容仅供参考，不构成任何投资建议<br>
+            数据来源：国家发改委、生态环境部、全国碳市场<br>
+            版权所有 Carbon Neutral Daily &copy; 2026
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end printable-report -->
+  </div><!-- end report-area -->
+
+</main>
+
+<script>
+// ---- DATE SETUP ----
+const today = new Date();
+document.getElementById('today-date').textContent =
+  today.toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+const dateInput = document.getElementById('report-date');
+dateInput.valueAsDate = today;
+dateInput.max = today.toISOString().split('T')[0];
+dateInput.min = '2020-01-01';
+
+// ---- NEWS DATA GENERATOR ----
+function getSeededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+function generateData(dateStr) {
+  const seed = dateStr.replace(/-/g,'') * 1;
+  const rand = getSeededRandom(seed);
+
+  const prices = [88, 91, 94, 97, 102, 105, 108, 112, 115, 118];
+  const basePrice = prices[Math.floor(rand() * prices.length)];
+  const priceChange = ((rand() * 6) - 3).toFixed(2);
+  const volume = (50 + Math.floor(rand() * 80)).toFixed(0);
+  const policyCount = Math.floor(rand() * 4) + 1;
+  const corpCount = Math.floor(rand() * 8) + 3;
+
+  const leadlines = [
+    { headline: '国家发改委印发《碳达峰碳中和标准体系建设指南》，明确2030年前主要目标与路径', tag: '政策法规', source: '国家发改委官网', excerpt: '《指南》提出到2025年，碳达峰碳中和标准体系基本建立，主要行业碳核算核查实现全覆盖。到2030年，碳达峰碳中和标准体系更加完善，支撑"双碳"工作的标准化技术水平显著提升。文件强调要加快推进能源、工业、交通、建筑等关键领域标准制修订工作，建立健全碳排放统计核算体系。' },
+    { headline: '全国碳市场配额日成交量创年内新高，机构投资者参与度明显提升', tag: '碳市场', source: '中国碳交易所', excerpt: '数据显示，全国碳市场今日成交量突破历史峰值，总成交金额超过15亿元人民币。业内人士分析，随着碳配额有偿分配比例逐步提升、更多行业纳入管控范围，市场流动性持续改善，价格发现功能日趋完善，机构投资者配置碳资产的意愿显著增强。' },
+    { headline: '生态环境部发布新版温室气体自愿减排交易管理办法，CCER市场重启在即', tag: '政策法规', source: '生态环境部', excerpt: '新版管理办法在项目类型、核查程序、信息披露等方面较原版本进行了全面升级，重点强化了对林业碳汇、可再生能源、甲烷减排等高质量项目的支持力度。市场预计，CCER重启后年供应规模将超过3000万吨，进一步丰富碳市场交易品种，为自愿减排项目开辟新的商业化渠道。' },
+    { headline: '中国可再生能源装机容量突破18亿千瓦，新能源成为新增电力主体', tag: '能源转型', source: '国家能源局', excerpt: '根据国家能源局最新数据，全国可再生能源发电装机容量再创新高。风电、光伏发电、水电、生物质发电等各类可再生能源装机均保持增长态势，预计全年非化石能源消费比重将突破22%，为实现2030年碳达峰目标打下坚实基础。' },
+    { headline: '绿色债券市场规模突破2万亿，绿色金融支撑低碳转型力度持续加码', tag: '绿色金融', source: '中国人民银行', excerpt: '中国人民银行数据显示，绿色贷款和绿色债券余额双双创下历史新高。监管部门同步推进绿色金融标准统一化工作，正在研究制定与国际接轨的绿色分类目录，进一步拓宽企业绿色融资渠道，支持重点行业低碳技术研发和绿色项目建设。' },
+  ];
+
+  const lead = leadlines[Math.floor(rand() * leadlines.length)];
+
+  const newsItems = [
+    { cat:'policy', catLabel:'政策法规', headline:'国务院发布碳达峰实施方案配套细则，细化分行业减碳路径', excerpt:'新出台的分行业碳达峰实施方案明确了钢铁、化工、水泥等高耗能行业的减碳时间节点和技术路线，部分行业较原定计划有所提前。', source:'新华社', time:'08:30' },
+    { cat:'market', catLabel:'碳市场', headline:'全国碳价稳步上行，地方试点市场与全国市场联动机制持续完善', excerpt:'据交易所公告，全国碳排放权交易市场碳配额开盘价较上日微涨，交易活跃度有所提升，绿色电力证书与碳市场协同机制正在加快研究。', source:'21世纪经济报道', time:'09:15' },
+    { cat:'energy', catLabel:'能源转型', headline:'国家电网完成大规模储能并网调试，助力新能源消纳再上台阶', excerpt:'新一批百兆瓦时级新型储能项目成功并网，将有效解决西北地区风光资源丰富地区弃风弃光问题，提升电网对高比例新能源的接纳能力。', source:'中国电力报', time:'10:00' },
+    { cat:'corp', catLabel:'企业动态', headline:'宝武、中铝、国投等央企发布年度ESG报告，碳减排力度超预期', excerpt:'多家大型央企同步披露ESG年度报告，部分企业碳排放强度下降幅度超出市场预期，绿色采购和供应链碳管理成为新亮点。', source:'证券时报', time:'10:45' },
+    { cat:'tech', catLabel:'低碳技术', headline:'清华大学CCUS研究取得重要突破，捕集成本降至200元/吨以下', excerpt:'清华大学气候变化与可持续发展研究院发布最新CCUS技术研究成果，新型吸附材料使碳捕集过程能耗降低约40%，为大规模工业应用奠定基础。', source:'科技日报', time:'11:30' },
+    { cat:'intl', catLabel:'国际动态', headline:'中欧碳市场互联互通研究框架协议正式签署，双边合作进入新阶段', excerpt:'中欧双方在布鲁塞尔签署碳市场合作研究框架协议，将在碳定价机制、MRV标准互认和碳边境调节机制等方面开展深度合作与信息共享。', source:'环球时报', time:'14:00' },
+  ];
+
+  const timelineItems = [
+    { time:'08:00', title:'国家发改委', desc:'召开碳达峰碳中和工作协调机制专题会议，研究部署重点任务落实工作。', featured: true },
+    { time:'09:30', title:'生态环境部', desc:'发布企业温室气体排放报告管理办法实施细则，进一步规范重点排放单位数据报送。', featured: false },
+    { time:'10:15', title:'国家能源局', desc:'公布上月可再生能源发电装机及利用数据，新能源消纳水平同比持续改善。', featured: false },
+    { time:'14:00', title:'全国碳市场', desc:'今日碳配额收盘，成交量较昨日有所放量，市场情绪趋于积极。', featured: true },
+    { time:'15:30', title:'财政部', desc:'研究起草气候投融资地方试点评估办法，推动绿色金融和气候金融标准深度融合。', featured: false },
+  ];
+
+  const opinions = [
+    { quote: '此次政策调整信号明确，将加速工业企业碳核算体系与国际标准的接轨，对提升中国产品在全球绿色市场的竞争力具有深远影响。碳关税壁垒的压力正转化为企业绿色转型的内生动力。', name: '李明远', title: '中国社科院可持续发展研究中心 首席研究员' },
+    { quote: '全国碳市场扩容是大势所趋。水泥、钢铁、化工等高排放行业的纳入将显著提升市场规模，但同步需要加强MRV体系建设和市场监管机制，防止数据造假风险再度出现。', name: '张晓华', title: '清华大学气候变化与可持续发展研究院 教授' },
+  ];
+
+  return {
+    price: basePrice,
+    priceChange,
+    volume,
+    policyCount,
+    corpCount,
+    lead,
+    newsItems: newsItems.sort(() => rand() - 0.5),
+    timelineItems,
+    opinions,
+  };
+}
+
+// ---- RENDER ----
+function renderReport(dateStr) {
+  const data = generateData(dateStr);
+  const [y, m, d] = dateStr.split('-');
+
+  // Date display
+  const dateObj = new Date(dateStr + 'T00:00:00');
+  const displayDate = dateObj.toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('display-date').textContent = displayDate;
+
+  // Stats
+  document.getElementById('stat-price').textContent = data.price + ' 元';
+  const pc = parseFloat(data.priceChange);
+  document.getElementById('stat-price-change').textContent = (pc >= 0 ? '+' : '') + data.priceChange + ' 元 较昨日';
+  document.getElementById('stat-price-change').className = 'stat-change' + (pc < 0 ? ' down' : '');
+  document.getElementById('stat-volume').textContent = data.volume + ' 万吨';
+  document.getElementById('stat-volume-change').textContent = '全国碳市场日成交';
+  document.getElementById('stat-policy').textContent = data.policyCount + ' 项';
+  document.getElementById('stat-corp').textContent = data.corpCount + ' 条';
+
+  // Lead Story
+  document.getElementById('lead-story-container').innerHTML = `
+    <div class="lead-story-content">
+      <span class="story-category-tag">${data.lead.tag}</span>
+      <h2 class="lead-headline">${data.lead.headline}</h2>
+      <div class="story-meta">
+        <span class="story-source">${data.lead.source}</span>
+        <span class="story-meta-dot"></span>
+        <span>${displayDate}</span>
+        <span class="story-meta-dot"></span>
+        <span>头版头条</span>
+      </div>
+      <p class="lead-excerpt">${data.lead.excerpt}</p>
+      <div class="story-tags">
+        <span class="story-tag">碳中和</span>
+        <span class="story-tag">双碳政策</span>
+        <span class="story-tag">绿色转型</span>
+        <span class="story-tag">${data.lead.tag}</span>
+      </div>
+    </div>
+    <div class="lead-story-sidebar">
+      <div class="sidebar-title">今日关键数据</div>
+      <div class="key-data-item">
+        <div class="key-data-label">碳配额价格 CEA</div>
+        <div class="key-data-value">${data.price} 元/吨</div>
+        <div class="key-data-note">较上日 ${pc >= 0 ? '+' : ''}${data.priceChange} 元，市场情绪${pc >= 0 ? '偏多' : '偏空'}</div>
+      </div>
+      <div class="key-data-item">
+        <div class="key-data-label">日成交量</div>
+        <div class="key-data-value">${data.volume}万吨</div>
+        <div class="key-data-note">成交金额约 ${(data.price * data.volume / 100).toFixed(0)} 百万元</div>
+      </div>
+      <div class="key-data-item">
+        <div class="key-data-label">新增政策文件</div>
+        <div class="key-data-value">${data.policyCount} 项</div>
+        <div class="key-data-note">国家级及省级政策文件合计</div>
+      </div>
+      <div class="key-data-item">
+        <div class="key-data-label">企业绿色公告</div>
+        <div class="key-data-value">${data.corpCount} 条</div>
+        <div class="key-data-note">A股上市公司碳相关信息披露</div>
+      </div>
+    </div>
+  `;
+
+  // News Grid
+  document.getElementById('news-grid-container').innerHTML = data.newsItems.map(item => `
+    <div class="news-card ${item.cat}">
+      <div class="card-category ${item.cat}">${item.catLabel}</div>
+      <h3 class="card-headline">${item.headline}</h3>
+      <p class="card-excerpt">${item.excerpt}</p>
+      <div class="card-footer">
+        <span class="card-source">${item.source}</span>
+        <span>${item.time}</span>
+      </div>
+    </div>
+  `).join('');
+
+  // Timeline
+  document.getElementById('timeline-container').innerHTML = `
+    <div class="section-label" style="margin-bottom:24px;">政策动态 &mdash; ${displayDate}</div>
+    <div class="timeline">
+      ${data.timelineItems.map(item => `
+        <div class="timeline-item">
+          <div class="timeline-dot ${item.featured ? 'featured' : ''}"></div>
+          <div class="timeline-time">${item.time}</div>
+          <div class="timeline-title">${item.title}</div>
+          <div class="timeline-detail">${item.desc}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Market Table
+  const rand = getSeededRandom(parseInt(dateStr.replace(/-/g,'')) + 999);
+  const markets = [
+    { name:'全国碳市场', sub:'CEA 配额', price:data.price, unit:'元/吨', chg:data.priceChange, vol:data.volume + '万吨', bar: 0.7 },
+    { name:'北京碳市场', sub:'BEA 配额', price:(data.price * 1.12 + rand()*3).toFixed(1), unit:'元/吨', chg:((rand()*4)-2).toFixed(2), vol:(Math.floor(rand()*20)+5) + '万吨', bar: 0.45 },
+    { name:'广东碳市场', sub:'GDEA 配额', price:(data.price * 0.94 + rand()*2).toFixed(1), unit:'元/吨', chg:((rand()*4)-2).toFixed(2), vol:(Math.floor(rand()*30)+10) + '万吨', bar: 0.55 },
+    { name:'上海碳市场', sub:'SHEA 配额', price:(data.price * 0.96 + rand()*2).toFixed(1), unit:'元/吨', chg:((rand()*4)-2).toFixed(2), vol:(Math.floor(rand()*15)+5) + '万吨', bar: 0.38 },
+  ];
+
+  document.getElementById('market-table-container').innerHTML = `
+    <div class="market-table-header">
+      <div class="mth-cell">市场名称</div>
+      <div class="mth-cell">最新价</div>
+      <div class="mth-cell">涨跌</div>
+      <div class="mth-cell">成交量</div>
+      <div class="mth-cell">活跃度</div>
+    </div>
+    ${markets.map(m => {
+      const chgNum = parseFloat(m.chg);
+      return `
+      <div class="market-row">
+        <div>
+          <div class="market-name">${m.name}</div>
+          <div class="market-sub">${m.sub}</div>
+        </div>
+        <div>
+          <div class="market-price">${m.price}</div>
+          <div class="market-sub">${m.unit}</div>
+        </div>
+        <div class="market-change ${chgNum >= 0 ? 'up' : 'down'}">${chgNum >= 0 ? '+' : ''}${m.chg}</div>
+        <div class="market-volume">${m.vol}</div>
+        <div>
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${m.bar*100}%"></div></div>
+        </div>
+      </div>
+    `}).join('')}
+  `;
+
+  // Opinions
+  document.getElementById('opinion-container').innerHTML = data.opinions.map(op => `
+    <div class="opinion-card">
+      <div class="opinion-quote">"${op.quote}"</div>
+      <div class="opinion-author">
+        <div class="author-name">${op.name}</div>
+        <div class="author-title">${op.title}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- GENERATE ----
+function generateReport() {
+  const dateVal = document.getElementById('report-date').value;
+  if (!dateVal) {
+    alert('请先选择报告日期');
+    return;
+  }
+
+  const emptyState = document.getElementById('empty-state');
+  const reportArea = document.getElementById('report-area');
+  const loadingState = document.getElementById('loading-state');
+  const btn = document.getElementById('gen-btn');
+
+  emptyState.style.display = 'none';
+  reportArea.classList.remove('visible');
+  loadingState.classList.add('active');
+  btn.classList.add('loading');
+  btn.textContent = '正在生成...';
+
+  setTimeout(() => {
+    renderReport(dateVal);
+    loadingState.classList.remove('active');
+    reportArea.classList.add('visible');
+    btn.classList.remove('loading');
+    btn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:inline;vertical-align:middle;margin-right:8px;">
+        <path d="M2 8l4 4 8-8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      已生成`;
+
+    reportArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    setTimeout(() => {
+      btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:inline;vertical-align:middle;margin-right:8px;">
+          <path d="M8 1v14M1 8h14" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="8" cy="8" r="4" stroke="white" stroke-width="1.5"/>
+        </svg>
+        生成日报`;
+    }, 2000);
+  }, 1800);
+}
+
+// ---- DOWNLOAD PDF ----
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const reportEl = document.getElementById('printable-report');
+  const dateVal = document.getElementById('report-date').value || 'report';
+
+  const btn = document.querySelector('.btn-download-pdf');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="white" stroke-width="1.2"/></svg> 生成中...';
+  btn.disabled = true;
+
+  html2canvas(reportEl, {
+    scale: 1.5,
+    useCORS: true,
+    backgroundColor: '#faf7f2',
+    logging: false,
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let yPos = 0;
+    let remaining = pdfHeight;
+
+    while (remaining > 0) {
+      pdf.addImage(imgData, 'PNG', 0, -yPos, pdfWidth, pdfHeight);
+      remaining -= pageHeight;
+      yPos += pageHeight;
+      if (remaining > 0) pdf.addPage();
+    }
+
+    pdf.save(`碳中和日报_${dateVal}.pdf`);
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  });
+}
+
+// ---- DOWNLOAD HTML ----
+function downloadHTML() {
+  const dateVal = document.getElementById('report-date').value || 'report';
+  const reportHTML = document.getElementById('printable-report').innerHTML;
+  const fullHTML = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>碳中和日报 ${dateVal}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0d1f0f;--forest:#1a3a1c;--moss:#2d5c30;--fern:#4a8c4e;--sage:#7ab87e;--mist:#b8d9ba;--parchment:#f5f0e8;--cream:#faf7f2;--gold:#c8a84b;--gold-light:#e8c96a;--red-accent:#c0392b;--text-primary:#1a1a1a;--text-secondary:#4a5a4c;--text-muted:#7a8a7c;--border:#d4e0d5;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--text-primary);max-width:1100px;margin:0 auto;padding:40px;}
+  .section-label{font-family:'Noto Sans SC',sans-serif;font-size:10px;font-weight:700;letter-spacing:5px;color:var(--fern);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+</style>
+</head>
+<body>${reportHTML}</body>
+</html>`;
+
+  const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `碳中和日报_${dateVal}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---- ENTER KEY ----
+document.getElementById('report-date').addEventListener('keypress', e => {
+  if (e.key === 'Enter') generateReport();
+});
+</script>
+</body>
+</html>
